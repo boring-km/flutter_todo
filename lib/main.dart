@@ -26,13 +26,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
+  final _todoTextEditController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -41,23 +35,38 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text(widget.title),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: <Widget>[
+              Flexible(
+                child: TextFormField(
+                  controller: _todoTextEditController,
+                  validator: (value) {
+                    if (value.trim().isEmpty) {
+                      return '할 일을 입력하세요.';
+                    }
+                    return null;
+                  },
+                  decoration: InputDecoration(
+                    hintText: '할 일을 입력하세요.',
+                  ),
+                  onChanged: (text) {
+                    print(text);
+                  },
+                ),
+              ),
+              Container(
+                child: IconButton(
+                  color: Colors.blue,
+                  icon: Icon(Icons.send),
+
+                ),
+              )
+            ],
+          ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
       ),
     );
   }
