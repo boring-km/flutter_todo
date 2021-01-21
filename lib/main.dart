@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_todo/todo.dart';
 
-const String _name = "navyCK";
+const String _name = "kangmin";
 
 void main() {
   runApp(MyToDoApp());
@@ -29,10 +31,12 @@ class MyToDo extends StatefulWidget {
 
 class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
   final _todoTextEditController = TextEditingController();
-  final List<TodoList> _list = <TodoList>[];
+  final List<TodoWidget> _todoList = <TodoWidget>[];
+  List<Todo> _initList = <Todo>[];
+  bool isFirst = true;
   DateTime selectedDate = DateTime.now();
-
   bool _isComposing = false;
+  int rank = -1;
 
   _selectDate(BuildContext context) async {
     final DateTime picked = await showDatePicker(
@@ -47,8 +51,34 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
       });
   }
 
+  _MyToDoState() {
+    // TODO 처음 로딩 시 불러올 수 있도록 수정 필요함
+    Stream<QuerySnapshot> stream = Firestore.instance
+        .collection('todo')
+        .document(_name)
+        .collection(getToday()).snapshots();
+    stream.forEach((qs) {
+      qs.documents.forEach((doc) {
+        _initList.add(Todo(doc['rank'], doc['data'], doc['isDone']));
+      });
+    });
+    _initList.sort((a,b) => a.rank.compareTo(b.rank));
+    for(var i=0, len = _initList.length; i < len; i++) {
+      var widget = TodoWidget(
+        text: _initList[i].data,
+        animationController: AnimationController(
+          duration: Duration(milliseconds: 700),
+          vsync: this,
+        ),
+      );
+      widget.animationController.forward();
+      _todoList.insert(0, widget);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -61,7 +91,7 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
               crossAxisAlignment: CrossAxisAlignment.center, // 교차 축 기준 중앙
               children: <Widget> [
                 Text(
-                  "${selectedDate.toLocal()}".split(' ')[0],
+                  getToday(),
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 IconButton(
@@ -71,13 +101,12 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
                 ),
               ],
             ),
-
             Flexible(
               child: ListView.builder(
                 padding: const EdgeInsets.all(8.0),
                 reverse: false,
-                itemCount: _list.length,
-                itemBuilder: (_, index) => _list[index],
+                itemCount: _todoList.length,
+                itemBuilder: (_, index) => _todoList[index],
               ),
             ),
             Divider(height: 1.0),
@@ -91,6 +120,10 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
         ),
       ),
     );
+  }
+
+  String getToday() {
+    return "${selectedDate.toLocal()}".split(' ')[0];
   }
 
   Widget _buildTextComposer() {
@@ -134,27 +167,37 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
     _todoTextEditController.clear();
     setState(() {
       _isComposing = false;
+      _addTodo(Todo(rank+1, text, false));
+      var widget = TodoWidget(
+        text: text,
+        animationController: AnimationController(
+          duration: Duration(milliseconds: 700),
+          vsync: this,
+        ),
+      );
+      setState(() {
+        _todoList.insert(0, widget);
+      });
+      widget.animationController.forward();
     });
-    TodoList list = TodoList(
-      text: text,
-      animationController: AnimationController(
-        duration: Duration(milliseconds: 700),
-        vsync: this,
-      ),
-    );
-    setState(() {
-      _list.insert(0, list);
-    });
-    list.animationController.forward();
+  }
+
+  // 할 일 추가 메서드
+  void _addTodo(Todo todo) {
+    Firestore.instance
+        .collection('todo')
+        .document(_name)
+        .collection(getToday())
+        .add({'rank': todo.rank, 'data': todo.data, 'isDone': todo.isDone});
   }
 }
 
 
-class TodoList extends StatelessWidget {
+class TodoWidget extends StatelessWidget {
   final String text;
   final AnimationController animationController;
 
-  TodoList({this.text, this.animationController});
+  TodoWidget({this.text, this.animationController});
 
   @override
   Widget build(BuildContext context) {
