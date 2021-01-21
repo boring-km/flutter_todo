@@ -32,11 +32,9 @@ class MyToDo extends StatefulWidget {
 class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
   final _todoTextEditController = TextEditingController();
   final List<TodoWidget> _todoList = <TodoWidget>[];
-  List<Todo> _initList = <Todo>[];
-  bool isFirst = true;
   DateTime selectedDate = DateTime.now();
   bool _isComposing = false;
-  int rank = -1;
+  int _rank = -1;
 
   _selectDate(BuildContext context) async {
     final DateTime picked = await showDatePicker(
@@ -51,34 +49,8 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
       });
   }
 
-  _MyToDoState() {
-    // TODO 처음 로딩 시 불러올 수 있도록 수정 필요함
-    Stream<QuerySnapshot> stream = Firestore.instance
-        .collection('todo')
-        .document(_name)
-        .collection(getToday()).snapshots();
-    stream.forEach((qs) {
-      qs.documents.forEach((doc) {
-        _initList.add(Todo(doc['rank'], doc['data'], doc['isDone']));
-      });
-    });
-    _initList.sort((a,b) => a.rank.compareTo(b.rank));
-    for(var i=0, len = _initList.length; i < len; i++) {
-      var widget = TodoWidget(
-        text: _initList[i].data,
-        animationController: AnimationController(
-          duration: Duration(milliseconds: 700),
-          vsync: this,
-        ),
-      );
-      widget.animationController.forward();
-      _todoList.insert(0, widget);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -86,29 +58,8 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
       body: Container(
         child: Column(
           children: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center, // 주 축 기준 중앙
-              crossAxisAlignment: CrossAxisAlignment.center, // 교차 축 기준 중앙
-              children: <Widget> [
-                Text(
-                  getToday(),
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                IconButton(
-                  icon: Icon(Icons.date_range),
-                  color: Colors.blue,
-                  onPressed: () => _selectDate(context),
-                ),
-              ],
-            ),
-            Flexible(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(8.0),
-                reverse: false,
-                itemCount: _todoList.length,
-                itemBuilder: (_, index) => _todoList[index],
-              ),
-            ),
+            _buildDateSelector(context),
+            _buildTodoListView(),
             Divider(height: 1.0),
             Container(
               decoration: BoxDecoration(
@@ -122,17 +73,118 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
     );
   }
 
-  String getToday() {
+  Row _buildDateSelector(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center, // 주 축 기준 중앙
+      crossAxisAlignment: CrossAxisAlignment.center, // 교차 축 기준 중앙
+      children: <Widget>[
+        Text(
+          _getSelectedDay(),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        IconButton(
+          icon: Icon(Icons.date_range),
+          color: Colors.blue,
+          onPressed: () => _selectDate(context),
+        ),
+      ],
+    );
+  }
+
+  
+  StreamBuilder<QuerySnapshot> _buildTodoListView() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: Firestore.instance
+          .collection('todo')
+          .document(_name)
+          .collection(_getSelectedDay())
+          .snapshots(),
+      builder: (context, snapshots) {
+        if (snapshots.connectionState == ConnectionState.active) {
+          List<DocumentSnapshot> documents = snapshots.data.documents;
+          // 할일의 갯수가 변경되었을 때만 변경된다. || 처음 앱 구동 시 호출한다.
+          if (_rank != documents.length - 1 || _rank == -1) {
+            List<Todo> _insertedList =
+                _sortData(documents);
+            _insertTodoList(_insertedList);
+            _rank = documents.length - 1; // 현재 할일의 갯수를 갱신한다.
+          }
+          return _getTodoListView();
+        } else if (snapshots.connectionState == ConnectionState.waiting) {
+          return _getTodoListView();
+        } else {
+          return _showFirebaseError();
+        }
+      },
+    );
+  }
+
+  Container _showFirebaseError() {
+    return Container(
+      child: Column(
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Icon(Icons.warning),
+          ),
+          Text('Error in loadind data')
+        ],
+      ),
+    );
+  }
+
+  // 리스트뷰에 불러온 할일들을 추가한다.
+  void _insertTodoList(List<Todo> _insertedList) {
+    for (var i = 0, len = _insertedList.length; i < len; i++) {
+      var widget = TodoWidget(
+        text: _insertedList[i].data,
+        animationController: AnimationController(
+          duration: Duration(milliseconds: 700),
+          vsync: this,
+        ),
+      );
+      _todoList.insert(0, widget);
+      widget.animationController.forward();
+    }
+  }
+
+  // 할일을 추가한 순서대로 다시 불러온다.
+  List<Todo> _sortData(List<DocumentSnapshot> documents) {
+    List<Todo> _insertedList = <Todo>[];
+    documents.forEach((doc) {
+      if (doc['rank'] > _rank) {
+        _insertedList.add(Todo(doc['rank'], doc['data'], doc['isDone']));
+      }
+    });
+    _insertedList.sort((a, b) => a.rank.compareTo(b.rank));
+    return _insertedList;
+  }
+
+  // TodoWidget을 저장하고 있는 리스트뷰를 반환한다.
+  Flexible _getTodoListView() {
+    return Flexible(
+      child: ListView.builder(
+        padding: const EdgeInsets.all(8.0),
+        reverse: false,
+        itemCount: _todoList.length,
+        itemBuilder: (_, index) => _todoList[index],
+      ),
+    );
+  }
+
+  // 선택된 날짜를 YYYY-MM-dd 형태로 가져오게 된다.
+  String _getSelectedDay() {
     return "${selectedDate.toLocal()}".split(' ')[0];
   }
 
+  // 할일을 입력하는 부분
   Widget _buildTextComposer() {
     return IconTheme(
         data: IconThemeData(color: Theme.of(context).accentColor),
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 8.0),
           child: Row(
-            children: <Widget> [
+            children: <Widget>[
               Flexible(
                 child: TextField(
                   controller: _todoTextEditController,
@@ -159,39 +211,27 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
               )
             ],
           ),
-        )
-    );
+        ));
   }
 
+  // 추가버튼 클릭 시 Firestore에 저장한다.
   void _handleSubmitted(String text) {
     _todoTextEditController.clear();
     setState(() {
       _isComposing = false;
-      _addTodo(Todo(rank+1, text, false));
-      var widget = TodoWidget(
-        text: text,
-        animationController: AnimationController(
-          duration: Duration(milliseconds: 700),
-          vsync: this,
-        ),
-      );
-      setState(() {
-        _todoList.insert(0, widget);
-      });
-      widget.animationController.forward();
+      _addTodo(Todo(_rank + 1, text, false));
     });
   }
 
-  // 할 일 추가 메서드
+  // Firestore 할 일 추가 메서드
   void _addTodo(Todo todo) {
     Firestore.instance
         .collection('todo')
         .document(_name)
-        .collection(getToday())
+        .collection(_getSelectedDay())
         .add({'rank': todo.rank, 'data': todo.data, 'isDone': todo.isDone});
   }
 }
-
 
 class TodoWidget extends StatelessWidget {
   final String text;
@@ -203,7 +243,7 @@ class TodoWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizeTransition(
       sizeFactor:
-      CurvedAnimation(parent: animationController, curve: Curves.easeOut),
+          CurvedAnimation(parent: animationController, curve: Curves.easeOut),
       axisAlignment: 0.0,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 10.0),
