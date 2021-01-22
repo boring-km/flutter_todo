@@ -46,6 +46,8 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
     if (picked != null && picked != selectedDate)
       setState(() {
         selectedDate = picked;
+        _rank = -1;
+        _todoList.clear();
       });
   }
 
@@ -104,8 +106,7 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
           List<DocumentSnapshot> documents = snapshots.data.documents;
           // 할일의 갯수가 변경되었을 때만 변경된다. || 처음 앱 구동 시 호출한다.
           if (_rank != documents.length - 1 || _rank == -1) {
-            List<Todo> _insertedList =
-                _sortData(documents);
+            List<Todo> _insertedList = _sortData(documents);
             _insertTodoList(_insertedList);
             _rank = documents.length - 1; // 현재 할일의 갯수를 갱신한다.
           }
@@ -143,7 +144,7 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
           vsync: this,
         ),
       );
-      _todoList.insert(0, widget);
+      _todoList.insert(0, widget);  // global 변수로 있는 할일 리스트에 추가한다.
       widget.animationController.forward();
     }
   }
