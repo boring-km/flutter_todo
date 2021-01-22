@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_todo/todo.dart';
+import 'package:flutter_todo/login.dart';
 
 // TODO 로그인 화면에서 불러오는 형식으로 변경할 예정
 const String _name = "kangmin";
@@ -18,6 +19,20 @@ class MyToDoApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: MyToDo(title: 'To Do'),
+      initialRoute: '/login',
+      onGenerateRoute: _getRoute,
+    );
+  }
+
+  Route<dynamic> _getRoute(RouteSettings settings) {
+    if (settings.name != '/login') {
+      return null;
+    }
+
+    return MaterialPageRoute<void> (
+      settings : settings,
+      builder: (BuildContext context) => LoginPage(),
+      fullscreenDialog: true,
     );
   }
 }
