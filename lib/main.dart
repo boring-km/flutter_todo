@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_todo/todo.dart';
 
+// TODO 로그인 화면에서 불러오는 형식으로 변경할 예정
 const String _name = "kangmin";
 
 void main() {
@@ -224,6 +225,7 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
     });
   }
 
+  // TODO db 연동 메서드가 계속 추가될 예정이므로 코드를 따로 분리하는게 좋아 보임
   // Firestore 할 일 추가 메서드
   void _addTodo(Todo todo) {
     Firestore.instance
@@ -234,6 +236,7 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
   }
 }
 
+// TODO 코드 분리 필요?
 class TodoWidget extends StatelessWidget {
   final String text;
   final AnimationController animationController;
