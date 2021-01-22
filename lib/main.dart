@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_todo/login.dart';
 
 const String _name = "navyCK";
 
@@ -15,6 +16,20 @@ class MyToDoApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: MyToDo(title: 'To Do'),
+      initialRoute: '/login',
+      onGenerateRoute: _getRoute,
+    );
+  }
+
+  Route<dynamic> _getRoute(RouteSettings settings) {
+    if (settings.name != '/login') {
+      return null;
+    }
+
+    return MaterialPageRoute<void> (
+      settings : settings,
+      builder: (BuildContext context) => LoginPage(),
+      fullscreenDialog: true,
     );
   }
 }
