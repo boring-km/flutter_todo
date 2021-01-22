@@ -1,1 +1,11 @@
 .idea
+.dart_tool
+build
+android
+ios
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+.packages
+flutter_todo.iml
+pubspec.lock
