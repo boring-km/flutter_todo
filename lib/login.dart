@@ -1,32 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_todo/signup.dart';
+
 
 class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
-}
-
-// 애니메이션 넣어보려고 했지만 실패.
-class FadeRoute extends PageRouteBuilder {
-  final Widget page;
-  FadeRoute({this.page})
-      : super(
-    pageBuilder: (
-        BuildContext context,
-        Animation<double> animation,
-        Animation<double> secondaryAnimation,
-        ) =>
-    page,
-    transitionsBuilder: (
-        BuildContext context,
-        Animation<double> animation,
-        Animation<double> secondaryAnimation,
-        Widget child,
-        ) =>
-        FadeTransition(
-          opacity: animation,
-          child: child,
-        ),
-  );
 }
 
 class _LoginPageState extends State<LoginPage> {
@@ -73,8 +52,14 @@ class _LoginPageState extends State<LoginPage> {
                 FlatButton(
                   child: Text('Sign Up'),
                   onPressed: () {
-                    _usernameController.clear();
-                    _passwordController.clear();
+                    // _usernameController.clear();
+                    // _passwordController.clear();
+                    Navigator.of(context, rootNavigator: true).push(
+                        CupertinoPageRoute<void> (
+                            fullscreenDialog: false,
+                            builder: (BuildContext context) => Sign_up(),
+                        ),
+                    );
                   },
                 ),
                 RaisedButton(
