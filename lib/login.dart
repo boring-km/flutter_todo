@@ -1,4 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_todo/main.dart';
+
+void main() {
+  runApp(MyToDoApp());
+}
+
+class MyToDoApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Flutter To Do',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: LoginPage(),
+      initialRoute: '/login',
+      onGenerateRoute: _getRoute,
+    );
+  }
+
+  Route<dynamic> _getRoute(RouteSettings settings) {
+    if (settings.name != '/login') {
+      return null;
+    }
+
+    return MaterialPageRoute<void> (
+      settings : settings,
+      builder: (BuildContext context) => LoginPage(),
+      fullscreenDialog: true,
+    );
+  }
+}
 
 class LoginPage extends StatefulWidget {
   @override
@@ -80,7 +112,12 @@ class _LoginPageState extends State<LoginPage> {
                 RaisedButton(
                   child: Text('LOGIN'),
                   onPressed: () {
-                    Navigator.pop(context);
+                    String name;
+                    if(_usernameController.text.isNotEmpty)
+                      name = _usernameController.text;
+                    else
+                      name = "test";
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => TodoMain(name)));
                   },
                 ),
               ],

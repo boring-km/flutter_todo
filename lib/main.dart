@@ -1,38 +1,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_todo/todo.dart';
-import 'package:flutter_todo/login.dart';
 
 // TODO 로그인 화면에서 불러오는 형식으로 변경할 예정
-const String _name = "kangmin";
+String _name = "test";
 
-void main() {
-  runApp(MyToDoApp());
-}
+class TodoMain extends StatelessWidget {
 
-class MyToDoApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter To Do',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: MyToDo(title: 'To Do'),
-      initialRoute: '/login',
-      onGenerateRoute: _getRoute,
-    );
+  TodoMain(String name){
+    _name = name;
   }
 
-  Route<dynamic> _getRoute(RouteSettings settings) {
-    if (settings.name != '/login') {
-      return null;
-    }
-
-    return MaterialPageRoute<void> (
-      settings : settings,
-      builder: (BuildContext context) => LoginPage(),
-      fullscreenDialog: true,
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: MyToDo(title: "To do",),
     );
   }
 }
@@ -153,9 +135,17 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
   // 리스트뷰에 불러온 할일들을 추가한다.
   void _insertTodoList(List<Todo> _insertedList) {
     for (var i = 0, len = _insertedList.length; i < len; i++) {
+      // text: _insertedList[i].data,
+      // isDone: _insertedList[i].isDone,
+      // documentId: _insertedList[i].docId,
+      // selectedDay: _getSelectedDay(),
       var widget = TodoWidget(
-        text: _insertedList[i].data,
-        animationController: AnimationController(
+        Todo(_insertedList[i].rank,
+            _insertedList[i].data,
+            _insertedList[i].isDone,
+            _insertedList[i].docId,
+            _getSelectedDay()),
+        AnimationController(
           duration: Duration(milliseconds: 700),
           vsync: this,
         ),
@@ -168,9 +158,10 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
   // 할일을 추가한 순서대로 다시 불러온다.
   List<Todo> _sortData(List<DocumentSnapshot> documents) {
     List<Todo> _insertedList = <Todo>[];
+    String day = _getSelectedDay();
     documents.forEach((doc) {
       if (doc['rank'] > _rank) {
-        _insertedList.add(Todo(doc['rank'], doc['data'], doc['isDone']));
+        _insertedList.add(Todo(doc['rank'], doc['data'], doc['isDone'], doc.documentID, day));
       }
     });
     _insertedList.sort((a, b) => a.rank.compareTo(b.rank));
@@ -236,7 +227,7 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
     _todoTextEditController.clear();
     setState(() {
       _isComposing = false;
-      _addTodo(Todo(_rank + 1, text, false));
+      _addTodo(Todo(_rank + 1, text, false, null, _getSelectedDay()));
     });
   }
 
@@ -246,42 +237,63 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
     Firestore.instance
         .collection('todo')
         .document(_name)
-        .collection(_getSelectedDay())
+        .collection(todo.selectedDay)
         .add({'rank': todo.rank, 'data': todo.data, 'isDone': todo.isDone});
   }
 }
 
 // TODO 코드 분리 필요?
-class TodoWidget extends StatelessWidget {
-  final String text;
+// ignore: must_be_immutable
+class TodoWidget extends StatefulWidget {
   final AnimationController animationController;
+  final Todo todo;
 
-  TodoWidget({this.text, this.animationController});
+  TodoWidget(this.todo, this.animationController);
+  @override
+  _TodoWidgetState createState() => _TodoWidgetState(this.todo, this.animationController);
+}
+
+class _TodoWidgetState extends State<TodoWidget> {
+  final AnimationController animationController;
+  final Todo todo;
+
+  _TodoWidgetState(this.todo, this.animationController);
+
+  void _changeDone() {
+    todo.isDone = !todo.isDone;
+    Firestore.instance
+        .collection('todo')
+        .document(_name)
+        .collection(todo.selectedDay)
+        .document(todo.docId)
+        .updateData({"isDone": todo.isDone});
+  }
 
   @override
   Widget build(BuildContext context) {
     return SizeTransition(
       sizeFactor:
-          CurvedAnimation(parent: animationController, curve: Curves.easeOut),
+      CurvedAnimation(parent: animationController, curve: Curves.easeOut),
       axisAlignment: 0.0,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 10.0),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            Container(
-              margin: const EdgeInsets.only(right: 16.0),
-              child: CircleAvatar(child: Text(_name[0])),
+            Checkbox(
+              value: todo.isDone,
+              onChanged: (bool value) {
+                setState(() {
+                  _changeDone();
+                });
+              },
             ),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text(_name, style: Theme.of(context).textTheme.headline6),
-                  Container(
-                    margin: const EdgeInsets.only(top: 5.0),
-                    child: Text(text),
-                  ),
+                  Text(todo.data, style: Theme.of(context).textTheme.headline6),
                 ],
               ),
             )

@@ -3,6 +3,8 @@ class Todo {
   int rank;
   bool isDone;
   String data;
+  String docId;
+  String selectedDay;
 
-  Todo(this.rank, this.data, this.isDone);
+  Todo(this.rank, this.data, this.isDone, this.docId, this.selectedDay);
 }
