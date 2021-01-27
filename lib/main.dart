@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_todo/todo.dart';
 
-// TODO 로그인 화면에서 불러오는 형식으로 변경할 예정
 String _name = "test";
 
 class TodoMain extends StatelessWidget {
@@ -104,8 +103,8 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
           List<DocumentSnapshot> documents = snapshots.data.documents;
           // 할일의 갯수가 변경되었을 때만 변경된다. || 처음 앱 구동 시 호출한다.
           if (_rank != documents.length - 1 || _rank == -1) {
-            List<Todo> _insertedList = _sortData(documents);
-            _insertTodoList(_insertedList);
+            List<Todo> sortedList = _sortDataToInsert(documents);
+            _insert(sortedList);
             _rank = documents.length - 1; // 현재 할일의 갯수를 갱신한다.
           }
           return _getTodoListView();
@@ -133,30 +132,21 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
   }
 
   // 리스트뷰에 불러온 할일들을 추가한다.
-  void _insertTodoList(List<Todo> _insertedList) {
+  void _insert(List<Todo> _insertedList) {
     for (var i = 0, len = _insertedList.length; i < len; i++) {
-      // text: _insertedList[i].data,
-      // isDone: _insertedList[i].isDone,
-      // documentId: _insertedList[i].docId,
-      // selectedDay: _getSelectedDay(),
       var widget = TodoWidget(
-        Todo(_insertedList[i].rank,
+        todo: Todo(_insertedList[i].rank,
             _insertedList[i].data,
             _insertedList[i].isDone,
             _insertedList[i].docId,
             _getSelectedDay()),
-        AnimationController(
-          duration: Duration(milliseconds: 700),
-          vsync: this,
-        ),
       );
       _todoList.insert(0, widget);  // global 변수로 있는 할일 리스트에 추가한다.
-      widget.animationController.forward();
     }
   }
 
   // 할일을 추가한 순서대로 다시 불러온다.
-  List<Todo> _sortData(List<DocumentSnapshot> documents) {
+  List<Todo> _sortDataToInsert(List<DocumentSnapshot> documents) {
     List<Todo> _insertedList = <Todo>[];
     String day = _getSelectedDay();
     documents.forEach((doc) {
@@ -243,21 +233,19 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
 }
 
 // TODO 코드 분리 필요?
-// ignore: must_be_immutable
 class TodoWidget extends StatefulWidget {
-  final AnimationController animationController;
   final Todo todo;
 
-  TodoWidget(this.todo, this.animationController);
+  TodoWidget({this.todo});  // 외부에서 animationController에 접근하도록
   @override
-  _TodoWidgetState createState() => _TodoWidgetState(this.todo, this.animationController);
+  _TodoWidgetState createState() => _TodoWidgetState(this.todo);
 }
 
-class _TodoWidgetState extends State<TodoWidget> {
-  final AnimationController animationController;
+class _TodoWidgetState extends State<TodoWidget> with SingleTickerProviderStateMixin {
+  AnimationController _animationController;
   final Todo todo;
 
-  _TodoWidgetState(this.todo, this.animationController);
+  _TodoWidgetState(this.todo);
 
   void _changeDone() {
     todo.isDone = !todo.isDone;
@@ -270,10 +258,20 @@ class _TodoWidgetState extends State<TodoWidget> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: Duration(milliseconds: 700),
+      vsync: this,
+    );
+    _animationController.forward();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SizeTransition(
       sizeFactor:
-      CurvedAnimation(parent: animationController, curve: Curves.easeOut),
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
       axisAlignment: 0.0,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 10.0),
