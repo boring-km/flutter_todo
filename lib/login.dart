@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_todo/main.dart';
 
 void main() {
@@ -37,92 +39,153 @@ class LoginPage extends StatefulWidget {
   _LoginPageState createState() => _LoginPageState();
 }
 
-// 애니메이션 넣어보려고 했지만 실패.
-class FadeRoute extends PageRouteBuilder {
-  final Widget page;
-  FadeRoute({this.page})
-      : super(
-    pageBuilder: (
-        BuildContext context,
-        Animation<double> animation,
-        Animation<double> secondaryAnimation,
-        ) =>
-    page,
-    transitionsBuilder: (
-        BuildContext context,
-        Animation<double> animation,
-        Animation<double> secondaryAnimation,
-        Widget child,
-        ) =>
-        FadeTransition(
-          opacity: animation,
-          child: child,
-        ),
-  );
-}
-
 class _LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _passwordConfirmController = TextEditingController();
+  bool _visible = true;
+
+  Future<bool> _onBackPressed() {
+    return showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Do you want to exit the app?"),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("NO"),
+              onPressed: () => Navigator.pop(context, false),
+            ),
+            FlatButton(
+              child: Text("yes"),
+              onPressed: () => SystemNavigator.pop(),
+            )
+          ],
+        ));
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: ListView(
-          padding: EdgeInsets.symmetric(horizontal: 24.0),
-          children: <Widget>[
-            SizedBox(height: 80.0),
-            Column(
-              children: <Widget>[
-                Image.asset(
-                  'assets/todo.png',
-                  width: 50,
-                ),
-                SizedBox(height: 16.0),
-                Text('To Do'),
-              ],
-            ),
-            SizedBox(height: 80.0),
-            TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(
-                filled: true,
-                labelText: 'Username',
+    return WillPopScope(
+      onWillPop: _onBackPressed,
+      child: Scaffold(
+        body: SafeArea(
+          child: ListView(
+            padding: EdgeInsets.symmetric(horizontal: 24.0),
+            children: <Widget>[
+              SizedBox(height: 80.0),
+              Column(
+                children: <Widget>[
+                  Image.asset(
+                    'assets/todo.png',
+                    width: 50,
+                  ),
+                  SizedBox(height: 16.0),
+                  Text('To Do'),
+                ],
               ),
-            ),
-            SizedBox(height: 12.0),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(
-                filled: true,
-                labelText: 'Password',
+              SizedBox(height: 80.0),
+              TextField(
+                controller: _usernameController,
+                decoration: InputDecoration(
+                  filled: true,
+                  labelText: 'ID',
+                ),
               ),
-              obscureText: true,
-            ),
-            ButtonBar(
-              children: <Widget>[
-                FlatButton(
-                  child: Text('Sign Up'),
-                  onPressed: () {
-                    _usernameController.clear();
-                    _passwordController.clear();
-                  },
+              SizedBox(height: 12.0),
+              TextField(
+                controller: _passwordController,
+                decoration: InputDecoration(
+                  filled: true,
+                  labelText: 'Password',
                 ),
-                RaisedButton(
-                  child: Text('LOGIN'),
-                  onPressed: () {
-                    String name;
-                    if(_usernameController.text.isNotEmpty)
-                      name = _usernameController.text;
-                    else
-                      name = "test";
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => TodoMain(name)));
-                  },
+                obscureText: true,
+              ),
+              SizedBox(height: 12.0),
+              AnimatedOpacity(
+                opacity: _visible ? 0.0 : 1.0,
+                duration: Duration(milliseconds: 500),
+                child: Visibility(
+                  visible: !_visible,
+                  child: TextField(
+                    controller: _passwordConfirmController,
+                    decoration: InputDecoration(
+                      filled: true,
+                      labelText: 'Password Confirm',
+                    ),
+                    obscureText: true,
+                  ),
+
+
                 ),
-              ],
-            ),
-          ],
+              ),
+              AnimatedOpacity(
+                opacity: _visible ? 1.0 : 0.0,
+                duration: Duration(milliseconds: 500),
+                child: Visibility(
+                  visible: _visible,
+                  child: ButtonBar(
+                    children: <Widget>[
+                      FlatButton(
+                        child: Text('Sign Up'),
+                        onPressed: () {
+                          _usernameController.clear();
+                          _passwordController.clear();
+                          _passwordConfirmController.clear();
+                          setState(() {
+                            _visible = !_visible;
+                          });
+                        },
+                      ),
+                      RaisedButton(
+                        child: Text('LOGIN'),
+                        onPressed: () {
+                          String name;
+                          if(_usernameController.text.isNotEmpty)
+                            name = _usernameController.text;
+                          else
+                            name = "test";
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => TodoMain(name)));
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              AnimatedOpacity(
+                opacity: _visible ? 0.0 : 1.0,
+                duration: Duration(milliseconds: 500),
+                child: Visibility(
+                  visible: !_visible,
+                  child: ButtonBar(
+                    children: <Widget>[
+                      FlatButton(
+                        child: Text('Cancel'),
+                        onPressed: () {
+                          _usernameController.clear();
+                          _passwordController.clear();
+                          _passwordConfirmController.clear();
+                          setState(() {
+                            _visible = !_visible;
+                          });
+                        },
+                      ),
+                      RaisedButton(
+                        child: Text('Sign Up'),
+                        onPressed: () {
+                          _usernameController.clear();
+                          _passwordController.clear();
+                          _passwordConfirmController.clear();
+                          setState(() {
+                            _visible = !_visible;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
