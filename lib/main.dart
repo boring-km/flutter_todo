@@ -144,7 +144,7 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
             padding: const EdgeInsets.all(8.0),
             child: Icon(Icons.warning),
           ),
-          Text('Error in loadind data')
+          Text('Error in loading data')
         ],
       ),
     );
