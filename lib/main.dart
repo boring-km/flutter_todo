@@ -1,19 +1,38 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_todo/todo.dart';
+import 'package:flutter_todo/login.dart';
 
 // TODO 로그인 화면에서 불러오는 형식으로 변경할 예정
-String _name = "test";
+const String _name = "kangmin";
 
-class TodoMain extends StatelessWidget {
-  TodoMain(String name){
-    _name = name;
-  }
+void main() {
+  runApp(MyToDoApp());
+}
 
+class MyToDoApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: MyToDo(title: "To do",),
+    return MaterialApp(
+      title: 'Flutter To Do',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: MyToDo(title: 'To Do'),
+      initialRoute: '/login',
+      onGenerateRoute: _getRoute,
+    );
+  }
+
+  Route<dynamic> _getRoute(RouteSettings settings) {
+    if (settings.name != '/login') {
+      return null;
+    }
+
+    return MaterialPageRoute<void> (
+      settings : settings,
+      builder: (BuildContext context) => LoginPage(),
+      fullscreenDialog: true,
     );
   }
 }
@@ -74,8 +93,8 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
 
   Row _buildDateSelector(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center, // 주 축 기준 중앙
+      crossAxisAlignment: CrossAxisAlignment.center, // 교차 축 기준 중앙
       children: <Widget>[
         Text(
           _getSelectedDay(),
@@ -90,7 +109,7 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
     );
   }
 
-
+  
   StreamBuilder<QuerySnapshot> _buildTodoListView() {
     return StreamBuilder<QuerySnapshot>(
       stream: Firestore.instance
@@ -103,8 +122,8 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
           List<DocumentSnapshot> documents = snapshots.data.documents;
           // 할일의 갯수가 변경되었을 때만 변경된다. || 처음 앱 구동 시 호출한다.
           if (_rank != documents.length - 1 || _rank == -1) {
-            List<Todo> sortedList = _sortDataToInsert(documents);
-            _insert(sortedList);
+            List<Todo> _insertedList = _sortData(documents);
+            _insertTodoList(_insertedList);
             _rank = documents.length - 1; // 현재 할일의 갯수를 갱신한다.
           }
           return _getTodoListView();
@@ -132,26 +151,26 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
   }
 
   // 리스트뷰에 불러온 할일들을 추가한다.
-  void _insert(List<Todo> _insertedList) {
+  void _insertTodoList(List<Todo> _insertedList) {
     for (var i = 0, len = _insertedList.length; i < len; i++) {
       var widget = TodoWidget(
-        todo: Todo(_insertedList[i].rank,
-            _insertedList[i].data,
-            _insertedList[i].isDone,
-            _insertedList[i].docId,
-            _getSelectedDay()),
+        text: _insertedList[i].data,
+        animationController: AnimationController(
+          duration: Duration(milliseconds: 700),
+          vsync: this,
+        ),
       );
       _todoList.insert(0, widget);  // global 변수로 있는 할일 리스트에 추가한다.
+      widget.animationController.forward();
     }
   }
 
   // 할일을 추가한 순서대로 다시 불러온다.
-  List<Todo> _sortDataToInsert(List<DocumentSnapshot> documents) {
+  List<Todo> _sortData(List<DocumentSnapshot> documents) {
     List<Todo> _insertedList = <Todo>[];
-    String day = _getSelectedDay();
     documents.forEach((doc) {
       if (doc['rank'] > _rank) {
-        _insertedList.add(Todo(doc['rank'], doc['data'], doc['isDone'], doc.documentID, day));
+        _insertedList.add(Todo(doc['rank'], doc['data'], doc['isDone']));
       }
     });
     _insertedList.sort((a, b) => a.rank.compareTo(b.rank));
@@ -174,7 +193,6 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
   String _getSelectedDay() {
     return "${selectedDate.toLocal()}".split(' ')[0];
   }
-
 
   // 할일을 입력하는 부분
   Widget _buildTextComposer() {
@@ -218,7 +236,7 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
     _todoTextEditController.clear();
     setState(() {
       _isComposing = false;
-      _addTodo(Todo(_rank + 1, text, false, null, _getSelectedDay()));
+      _addTodo(Todo(_rank + 1, text, false));
     });
   }
 
@@ -234,65 +252,36 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
 }
 
 // TODO 코드 분리 필요?
-class TodoWidget extends StatefulWidget {
-  final Todo todo;
+class TodoWidget extends StatelessWidget {
+  final String text;
+  final AnimationController animationController;
 
-  TodoWidget({this.todo});  // 외부에서 animationController에 접근하도록
-  @override
-  _TodoWidgetState createState() => _TodoWidgetState(this.todo);
-}
-
-class _TodoWidgetState extends State<TodoWidget> with SingleTickerProviderStateMixin {
-  AnimationController _animationController;
-  final Todo todo;
-
-  _TodoWidgetState(this.todo);
-
-  void _changeDone() {
-    todo.isDone = !todo.isDone;
-    Firestore.instance
-        .collection('todo')
-        .document(_name)
-        .collection(todo.selectedDay)
-        .document(todo.docId)
-        .updateData({"isDone": todo.isDone});
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: Duration(milliseconds: 700),
-      vsync: this,
-    );
-    _animationController.forward();
-  }
+  TodoWidget({this.text, this.animationController});
 
   @override
   Widget build(BuildContext context) {
     return SizeTransition(
       sizeFactor:
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+          CurvedAnimation(parent: animationController, curve: Curves.easeOut),
       axisAlignment: 0.0,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 10.0),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Checkbox(
-              value: todo.isDone,
-              onChanged: (bool value) {
-                setState(() {
-                  _changeDone();
-                });
-              },
+            Container(
+              margin: const EdgeInsets.only(right: 16.0),
+              child: CircleAvatar(child: Text(_name[0])),
             ),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text(todo.data, style: Theme.of(context).textTheme.headline6),
+                  Text(_name, style: Theme.of(context).textTheme.headline6),
+                  Container(
+                    margin: const EdgeInsets.only(top: 5.0),
+                    child: Text(text),
+                  ),
                 ],
               ),
             )
