@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_todo/main.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() {
   runApp(MyToDoApp());
@@ -61,6 +62,13 @@ class _LoginPageState extends State<LoginPage> {
             )
           ],
         ));
+  }
+
+  void _signUp() {
+    Firestore.instance
+        .collection('todo')
+        .document(_usernameController.text)
+        .setData({'pw':_passwordController.text});
   }
 
   @override
@@ -128,9 +136,7 @@ class _LoginPageState extends State<LoginPage> {
                       FlatButton(
                         child: Text('Sign Up'),
                         onPressed: () {
-                          _usernameController.clear();
-                          _passwordController.clear();
-                          _passwordConfirmController.clear();
+                          clear();
                           setState(() {
                             _visible = !_visible;
                           });
@@ -161,9 +167,7 @@ class _LoginPageState extends State<LoginPage> {
                       FlatButton(
                         child: Text('Cancel'),
                         onPressed: () {
-                          _usernameController.clear();
-                          _passwordController.clear();
-                          _passwordConfirmController.clear();
+                          clear();
                           setState(() {
                             _visible = !_visible;
                           });
@@ -172,12 +176,11 @@ class _LoginPageState extends State<LoginPage> {
                       RaisedButton(
                         child: Text('Sign Up'),
                         onPressed: () {
-                          _usernameController.clear();
-                          _passwordController.clear();
-                          _passwordConfirmController.clear();
+                          _signUp();
                           setState(() {
                             _visible = !_visible;
                           });
+                          clear();
                         },
                       ),
                     ],
@@ -189,5 +192,11 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+
+  void clear() {
+    _usernameController.clear();
+    _passwordController.clear();
+    _passwordConfirmController.clear();
   }
 }
