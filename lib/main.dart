@@ -31,7 +31,6 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
   final List<TodoWidget> _todoList = <TodoWidget>[];
   DateTime selectedDate = DateTime.now();
   int _rank = -1;
-  Future<bool> isLoaded;
 
   _selectDate(BuildContext context) async {
     final DateTime picked = await showDatePicker(
@@ -109,6 +108,7 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
           }
           return _getTodoListView();
         } else if (snapshots.connectionState == ConnectionState.waiting) {
+          // TODO 항목을 추가할 때마다 이쪽으로 들어와서 보기가 안좋음
           return CircularProgressIndicator();
         } else {
           return _showFirebaseError();
