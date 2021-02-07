@@ -71,6 +71,24 @@ class _LoginPageState extends State<LoginPage> {
         .setData({'pw':_passwordController.text});
   }
 
+  void _login(String id, String pw) {
+    Future<DocumentSnapshot> future = Firestore.instance
+        .collection('todo')
+        .document(id)
+        .get();
+    future.then((DocumentSnapshot snapshot) {
+      String savedPW = snapshot['pw'];
+      if (pw == savedPW) {
+        // TODO 비밀번호 일치함 => 메인화면으로 전환
+        print('일치함');
+      } else {
+        // TODO 일치하지 않음
+        print('일치하지 않음');
+      }
+    });
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -145,12 +163,13 @@ class _LoginPageState extends State<LoginPage> {
                       RaisedButton(
                         child: Text('LOGIN'),
                         onPressed: () {
-                          String name;
-                          if(_usernameController.text.isNotEmpty)
-                            name = _usernameController.text;
-                          else
-                            name = "test";
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => TodoMain(name)));
+                          _login(_usernameController.text, _passwordController.text);
+                          // String name;
+                          // if(_usernameController.text.isNotEmpty)
+                          //   name = _usernameController.text;
+                          // else
+                          //   name = "test";
+                          // Navigator.push(context, MaterialPageRoute(builder: (context) => TodoMain(name)));
                         },
                       ),
                     ],
