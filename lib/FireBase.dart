@@ -1,0 +1,30 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'todo.dart';
+
+class FireBaseDAO {
+  static addTodo(String userName, Todo todo) {
+    Firestore.instance
+        .collection('todo')
+        .document(userName)
+        .collection(todo.selectedDay)
+        .add({'rank': todo.rank, 'data': todo.data, 'isDone': todo.isDone});
+  }
+
+  static void deleteTodo(String userName, Todo todo) {
+    Firestore.instance
+        .collection('todo')
+        .document(userName)
+        .collection(todo.selectedDay)
+        .document(todo.docId).delete();
+  }
+
+  static void toggleTodo(String userName, Todo todo) {
+    Firestore.instance
+        .collection('todo')
+        .document(userName)
+        .collection(todo.selectedDay)
+        .document(todo.docId)
+        .updateData({'isDone': !todo.isDone});
+  }
+}

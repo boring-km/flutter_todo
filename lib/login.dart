@@ -15,7 +15,6 @@ class MyToDoApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: LoginPage(),
       initialRoute: '/login',
       onGenerateRoute: _getRoute,
     );
