@@ -1,8 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_todo/main.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:toast/toast.dart';
+import 'package:flutter_todo/main.dart';
+
 
 void main() {
   runApp(MyToDoApp());
@@ -45,6 +47,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   final _passwordConfirmController = TextEditingController();
   bool _visible = true;
+  bool _logintoken = false;
 
   Future<bool> _onBackPressed() {
     return showDialog(
@@ -71,22 +74,27 @@ class _LoginPageState extends State<LoginPage> {
         .setData({'pw':_passwordController.text});
   }
 
-  void _login(String id, String pw) {
-    Future<DocumentSnapshot> future = Firestore.instance
+  void _login(String id, String pw) async {
+    DocumentSnapshot snapshot = await Firestore.instance
         .collection('todo')
         .document(id)
         .get();
-    future.then((DocumentSnapshot snapshot) {
-      String savedPW = snapshot['pw'];
-      if (pw == savedPW) {
-        // TODO 비밀번호 일치함 => 메인화면으로 전환
-        print('일치함');
-      } else {
-        // TODO 일치하지 않음
-        print('일치하지 않음');
-      }
-    });
+    String savedPW = snapshot['pw'];
+    if (pw == savedPW) {
+      // TODO 비밀번호 일치함 => 메인화면으로 전환
+      print('일치함');
+      showToast(id + '님, 안녕하세요!');
+      _logintoken = true;
+    } else {
+      // TODO 일치하지 않음
+      print('일치하지 않음');
+      showToast('아이디와 비밀번호를 확인해주세요.');
+      _logintoken = false;
+    }
+  }
 
+  void showToast(String msg) {
+    Toast.show(msg, context, duration: 2);
   }
 
   @override
@@ -140,8 +148,6 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     obscureText: true,
                   ),
-
-
                 ),
               ),
               AnimatedOpacity(
@@ -162,14 +168,19 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       RaisedButton(
                         child: Text('LOGIN'),
-                        onPressed: () {
-                          _login(_usernameController.text, _passwordController.text);
-                          // String name;
-                          // if(_usernameController.text.isNotEmpty)
-                          //   name = _usernameController.text;
-                          // else
-                          //   name = "test";
-                          // Navigator.push(context, MaterialPageRoute(builder: (context) => TodoMain(name)));
+                        onPressed: () async {
+                          if (_usernameController.text.isEmpty) {
+                            showToast('아이디를 입력해주세요.');
+                          } else if (_passwordController.text.isEmpty) {
+                            showToast('비밀번호를 입력해주세요.');
+                          } else {
+                            await _login(_usernameController.text, _passwordController.text);
+                            if (_logintoken) {
+                              String name;
+                              name = _usernameController.text;
+                              Navigator.push(context, CupertinoPageRoute(builder: (context) => TodoMain(name)));
+                            }
+                          }
                         },
                       ),
                     ],
@@ -195,11 +206,20 @@ class _LoginPageState extends State<LoginPage> {
                       RaisedButton(
                         child: Text('Sign Up'),
                         onPressed: () {
-                          _signUp();
-                          setState(() {
-                            _visible = !_visible;
-                          });
-                          clear();
+                          if (_usernameController.text.isEmpty || _passwordController.text.isEmpty || _passwordConfirmController.text.isEmpty) {
+                            showToast('빈 칸 없이 입력해주세요.');
+                          } else {
+                            if (_passwordController.text == _passwordConfirmController.text) {
+                              _signUp();
+                              setState(() {
+                                _visible = !_visible;
+                              });
+                              clear();
+                              showToast('회원가입이 완료되었어요.');
+                            } else {
+                              showToast('비밀번호가 일치하지 않아요.');
+                            }
+                          }
                         },
                       ),
                     ],
