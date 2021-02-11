@@ -168,9 +168,39 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
   Widget _buildTodoListWidget(Todo sortedTodo) {
     bool isDone = sortedTodo.isDone;
     IconData iconImage = generateIcon(isDone);
+    TextEditingController changeTextController = TextEditingController(text: sortedTodo.data);
     return ListTile(
       onTap: () => null,
-      onLongPress: () => null,  // TODO: 길게 누르면 수정 모드로 변경
+      onLongPress: () => showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('할일 변경'),
+            content: TextField(
+              controller: changeTextController,
+              autofocus: true,
+            ),
+            actions: [
+              FlatButton(
+                child: Text('취소'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              FlatButton(
+                child: Text('확인'),
+                onPressed: () {
+                  String text = changeTextController.value.text;
+                  sortedTodo.data = text;
+                  FireBaseDAO.updateTodo(_name, sortedTodo);
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        }
+      ),  // TODO: 길게 누르면 수정 모드로 변경
       leading: IconButton(  // 왼쪽
         icon: Icon(
           iconImage,

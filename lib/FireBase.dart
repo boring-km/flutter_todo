@@ -27,4 +27,13 @@ class FireBaseDAO {
         .document(todo.docId)
         .updateData({'isDone': !todo.isDone});
   }
+
+  static void updateTodo(String userName, Todo todo) {
+    Firestore.instance
+        .collection('todo')
+        .document(userName)
+        .collection(todo.selectedDay)
+        .document(todo.docId)
+        .updateData({'data': todo.data});
+  }
 }
