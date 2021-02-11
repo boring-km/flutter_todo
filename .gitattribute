@@ -1,0 +1,6 @@
+*.swift linguist-vendored
+*.kt linguist-vendored
+*.java linguist-vendored
+Podfile linguist-vendored
+*.h linguist-vendored
+*.d linguist-vendored
