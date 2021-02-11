@@ -35,6 +35,8 @@ class MyToDoApp extends StatelessWidget {
       fullscreenDialog: true,
     );
   }
+
+
 }
 
 class LoginPage extends StatefulWidget {
@@ -47,7 +49,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   final _passwordConfirmController = TextEditingController();
   bool _visible = true;
-  bool _logintoken = false;
+  bool _loginToken = false;
 
   Future<bool> _onBackPressed() {
     return showDialog(
@@ -67,12 +69,33 @@ class _LoginPageState extends State<LoginPage> {
         ));
   }
 
+
+  void _idCheck() async {
+    final snapshot = await Firestore.instance
+        .collection('todo')
+        .document(_usernameController.text)
+        .get();
+
+    if (snapshot.exists) {
+      print('이미 사용 중');
+      showToast('이미 사용 중인 아이디에요.');
+    } else {
+      _signUp();
+      setState(() {
+        _visible = !_visible;
+      });
+      clear();
+      showToast('회원가입이 완료되었어요.');
+    }
+  }
+
   void _signUp() {
     Firestore.instance
         .collection('todo')
         .document(_usernameController.text)
         .setData({'pw':_passwordController.text});
   }
+
 
   void _login(String id, String pw) async {
     DocumentSnapshot snapshot = await Firestore.instance
@@ -81,15 +104,13 @@ class _LoginPageState extends State<LoginPage> {
         .get();
     String savedPW = snapshot['pw'];
     if (pw == savedPW) {
-      // TODO 비밀번호 일치함 => 메인화면으로 전환
       print('일치함');
       showToast(id + '님, 안녕하세요!');
-      _logintoken = true;
+      _loginToken = true;
     } else {
-      // TODO 일치하지 않음
       print('일치하지 않음');
       showToast('아이디와 비밀번호를 확인해주세요.');
-      _logintoken = false;
+      _loginToken = false;
     }
   }
 
@@ -175,7 +196,7 @@ class _LoginPageState extends State<LoginPage> {
                             showToast('비밀번호를 입력해주세요.');
                           } else {
                             await _login(_usernameController.text, _passwordController.text);
-                            if (_logintoken) {
+                            if (_loginToken) {
                               String name;
                               name = _usernameController.text;
                               Navigator.push(context, CupertinoPageRoute(builder: (context) => TodoMain(name)));
@@ -210,12 +231,7 @@ class _LoginPageState extends State<LoginPage> {
                             showToast('빈 칸 없이 입력해주세요.');
                           } else {
                             if (_passwordController.text == _passwordConfirmController.text) {
-                              _signUp();
-                              setState(() {
-                                _visible = !_visible;
-                              });
-                              clear();
-                              showToast('회원가입이 완료되었어요.');
+                              _idCheck();
                             } else {
                               showToast('비밀번호가 일치하지 않아요.');
                             }
