@@ -56,7 +56,7 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
                 final sortedDocuments = _sortDataToInsert(documents);
                 return Expanded(
                   child: ListView(
-                    children: sortedDocuments.map((sortedTodo) => _buildWidget(sortedTodo)).toList(),
+                    children: sortedDocuments.map((sortedTodo) => _buildTodoListWidget(sortedTodo)).toList(),
                   ),
                 );
               },
@@ -111,9 +111,11 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
   List<Todo> _sortDataToInsert(List<DocumentSnapshot> documents) {
     List<Todo> _insertedList = <Todo>[];
     String day = _getSelectedDay();
-    documents.forEach((doc) => _insertedList.add(Todo(doc['rank'], doc['data'], doc['isDone'], doc.documentID, day)));
-    _insertedList.sort((a, b) => b.rank.compareTo(a.rank));
-    _rank = _insertedList[0].rank;
+    if (documents.isNotEmpty) {
+      documents.forEach((doc) => _insertedList.add(Todo(doc['rank'], doc['data'], doc['isDone'], doc.documentID, day)));
+      _insertedList.sort((a, b) => b.rank.compareTo(a.rank));
+      _rank = _insertedList[0].rank;
+    }
     return _insertedList;
   }
 
@@ -151,7 +153,8 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
               )
             ],
           ),
-        ));
+        )
+    );
   }
 
   // 추가버튼 클릭 시 Firestore에 저장한다.
@@ -162,7 +165,7 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
   }
 
   // 할 일 객체를 ListTile 형태로 변경하는 메서드
-  Widget _buildWidget(Todo sortedTodo) {
+  Widget _buildTodoListWidget(Todo sortedTodo) {
     bool isDone = sortedTodo.isDone;
     IconData iconImage = generateIcon(isDone);
     return ListTile(
