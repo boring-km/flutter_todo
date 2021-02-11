@@ -200,7 +200,7 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
             ],
           );
         }
-      ),  // TODO: 길게 누르면 수정 모드로 변경
+      ),
       leading: IconButton(  // 왼쪽
         icon: Icon(
           iconImage,
