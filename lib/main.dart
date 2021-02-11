@@ -30,7 +30,6 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
   final _todoTextEditController = TextEditingController();
   final List<TodoWidget> _todoList = <TodoWidget>[];
   DateTime selectedDate = DateTime.now();
-  bool _isComposing = false;
   int _rank = -1;
 
   _selectDate(BuildContext context) async {
@@ -90,7 +89,7 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
     );
   }
 
-  
+
   StreamBuilder<QuerySnapshot> _buildTodoListView() {
     return StreamBuilder<QuerySnapshot>(
       stream: Firestore.instance
@@ -103,13 +102,14 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
           List<DocumentSnapshot> documents = snapshots.data.documents;
           // 할일의 갯수가 변경되었을 때만 변경된다. || 처음 앱 구동 시 호출한다.
           if (_rank != documents.length - 1 || _rank == -1) {
-            List<Todo> sortedList = _sortDataToInsert(documents);
-            _insert(sortedList);
+            List<Todo> _insertedList = _sortDataToInsert(documents);
+            _insert(_insertedList);
             _rank = documents.length - 1; // 현재 할일의 갯수를 갱신한다.
           }
           return _getTodoListView();
         } else if (snapshots.connectionState == ConnectionState.waiting) {
-          return _getTodoListView();
+          // TODO 항목을 추가할 때마다 이쪽으로 들어와서 보기가 안좋음
+          return CircularProgressIndicator();
         } else {
           return _showFirebaseError();
         }
@@ -140,8 +140,13 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
             _insertedList[i].isDone,
             _insertedList[i].docId,
             _getSelectedDay()),
+        controller: AnimationController(
+          duration: Duration(milliseconds: 700),
+          vsync: this,
+        ),
       );
       _todoList.insert(0, widget);  // global 변수로 있는 할일 리스트에 추가한다.
+      widget.controller.forward();
     }
   }
 
@@ -191,20 +196,15 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
                   ),
                   onChanged: (text) {
                     print(text);
-                    setState(() {
-                      _isComposing = text.length > 0;
-                    });
                   },
-                  onSubmitted: _isComposing ? _handleSubmitted : null,
+                  onSubmitted: _handleSubmitted,
                 ),
               ),
               Container(
                 child: IconButton(
                   color: Colors.blue,
                   icon: Icon(Icons.send),
-                  onPressed: _isComposing
-                      ? () => _handleSubmitted(_todoTextEditController.text)
-                      : null,
+                  onPressed: () => _handleSubmitted(_todoTextEditController.text),
                 ),
               )
             ],
@@ -214,9 +214,9 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
 
   // 추가버튼 클릭 시 Firestore에 저장한다.
   void _handleSubmitted(String text) {
+    if(text == null || text == "") return;
     _todoTextEditController.clear();
     setState(() {
-      _isComposing = false;
       _addTodo(Todo(_rank + 1, text, false, null, _getSelectedDay()));
     });
   }
@@ -235,17 +235,24 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
 // TODO 코드 분리 필요?
 class TodoWidget extends StatefulWidget {
   final Todo todo;
+  final AnimationController controller;
 
-  TodoWidget({this.todo});  // 외부에서 animationController에 접근하도록
+  TodoWidget({this.todo, this.controller});  // 외부에서 animationController에 접근하도록
   @override
-  _TodoWidgetState createState() => _TodoWidgetState(this.todo);
+  _TodoWidgetState createState() => _TodoWidgetState(this.todo, this.controller);
 }
 
 class _TodoWidgetState extends State<TodoWidget> with SingleTickerProviderStateMixin {
-  AnimationController _animationController;
+  final AnimationController animationController;
   final Todo todo;
 
-  _TodoWidgetState(this.todo);
+  _TodoWidgetState(this.todo, this.animationController);
+
+  @override
+  void initState() {
+    super.initState();
+    animationController.forward();
+  }
 
   void _changeDone() {
     todo.isDone = !todo.isDone;
@@ -258,20 +265,10 @@ class _TodoWidgetState extends State<TodoWidget> with SingleTickerProviderStateM
   }
 
   @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: Duration(milliseconds: 700),
-      vsync: this,
-    );
-    _animationController.forward();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return SizeTransition(
       sizeFactor:
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+      CurvedAnimation(parent: animationController, curve: Curves.easeOut),
       axisAlignment: 0.0,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 10.0),
