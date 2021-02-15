@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_todo/todo.dart';
 
-// TODO 로그인 화면에서 불러오는 형식으로 변경할 예정
 String _name = "test";
 
 class TodoMain extends StatelessWidget {
@@ -33,6 +33,24 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
   bool _isComposing = false;
   int _rank = -1;
 
+  Future<bool> _onBackPressed() {
+    return showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("To Do를 종료하실건가요?"),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("아니오"),
+              onPressed: () => Navigator.pop(context, false),
+            ),
+            FlatButton(
+              child: Text("네"),
+              onPressed: () => SystemNavigator.pop(),
+            )
+          ],
+        ));
+  }
+
   _selectDate(BuildContext context) async {
     final DateTime picked = await showDatePicker(
       context: context,
@@ -50,26 +68,59 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Container(
-        child: Column(
-          children: <Widget>[
-            _buildDateSelector(context),
-            _buildTodoListView(),
-            Divider(height: 1.0),
-            Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
+    return WillPopScope(
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(widget.title),
+            centerTitle: true,
+            leading: IconButton(
+              icon: Icon(
+                Icons.logout,
+                color: Colors.white,
               ),
-              child: _buildTextComposer(),
+              onPressed: () => Navigator.pop(context),
             ),
-          ],
+          ),
+          body: Container(
+            child: Column(
+              children: <Widget> [
+                _buildDateSelector(context),
+                _buildTodoListView(),
+                Divider(height: 1.0),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                  ),
+                  child: _buildTextComposer(),
+                ),
+              ],
+            ),
+          ),
         ),
-      ),
+        onWillPop: _onBackPressed
     );
+
+    //
+    // return Scaffold(
+    //   appBar: AppBar(
+    //     title: Text(widget.title),
+    //   ),
+    //   body: Container(
+    //     child: Column(
+    //       children: <Widget>[
+    //         _buildDateSelector(context),
+    //         _buildTodoListView(),
+    //         Divider(height: 1.0),
+    //         Container(
+    //           decoration: BoxDecoration(
+    //             color: Theme.of(context).cardColor,
+    //           ),
+    //           child: _buildTextComposer(),
+    //         ),
+    //       ],
+    //     ),
+    //   ),
+    // );
   }
 
   Row _buildDateSelector(BuildContext context) {
