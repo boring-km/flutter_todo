@@ -99,28 +99,6 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
         ),
         onWillPop: _onBackPressed
     );
-
-    //
-    // return Scaffold(
-    //   appBar: AppBar(
-    //     title: Text(widget.title),
-    //   ),
-    //   body: Container(
-    //     child: Column(
-    //       children: <Widget>[
-    //         _buildDateSelector(context),
-    //         _buildTodoListView(),
-    //         Divider(height: 1.0),
-    //         Container(
-    //           decoration: BoxDecoration(
-    //             color: Theme.of(context).cardColor,
-    //           ),
-    //           child: _buildTextComposer(),
-    //         ),
-    //       ],
-    //     ),
-    //   ),
-    // );
   }
 
   Row _buildDateSelector(BuildContext context) {
