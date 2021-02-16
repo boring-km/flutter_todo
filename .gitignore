@@ -3,9 +3,12 @@
 build
 android
 ios
+android/*
 .flutter-plugins
 .flutter-plugins-dependencies
 .metadata
 .packages
 flutter_todo.iml
 pubspec.lock
+*.java
+*.d
