@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:toast/toast.dart'
 import 'package:flutter_todo/main.dart';
 
 void main() {
@@ -48,14 +50,14 @@ class _LoginPageState extends State<LoginPage> {
     return showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text("Do you want to exit the app?"),
+          title: Text("To Do를 종료하실건가요?"),
           actions: <Widget>[
             FlatButton(
-              child: Text("NO"),
+              child: Text("아니오"),
               onPressed: () => Navigator.pop(context, false),
             ),
             FlatButton(
-              child: Text("yes"),
+              child: Text("네"),
               onPressed: () => SystemNavigator.pop(),
             )
           ],
