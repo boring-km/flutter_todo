@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_todo/FireBase.dart';
 import 'package:flutter_todo/todo.dart';
 
@@ -31,46 +32,57 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
   final _todoTextEditController = TextEditingController();
   DateTime selectedDate = DateTime.now();
   int _rank = -1;
-
+  
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Container(
-        child: Column(
-          children: <Widget>[
-            _buildDateSelector(context),
-            StreamBuilder<QuerySnapshot>(
-              stream: Firestore.instance
-                  .collection('todo')
-                  .document(_name)
-                  .collection(_getSelectedDay())
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return CircularProgressIndicator();
-                }
-                final documents = snapshot.data.documents;
-                final sortedDocuments = _sortDataToInsert(documents);
-                return Expanded(
-                  child: ListView(
-                    children: sortedDocuments.map((sortedTodo) => _buildTodoListWidget(sortedTodo)).toList(),
-                  ),
-                );
-              },
+    return WillPopScope(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(widget.title),
+          centerTitle: true,
+          leading: IconButton(
+            icon: Icon(
+              Icons.logout,
+              color: Colors.white,
             ),
-            Divider(height: 1.0),
-            Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        body: Container(
+          child: Column(
+            children: <Widget>[
+              _buildDateSelector(context),
+              StreamBuilder<QuerySnapshot>(
+                stream: Firestore.instance
+                    .collection('todo')
+                    .document(_name)
+                    .collection(_getSelectedDay())
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return CircularProgressIndicator();
+                  }
+                  final documents = snapshot.data.documents;
+                  final sortedDocuments = _sortDataToInsert(documents);
+                  return Expanded(
+                    child: ListView(
+                      children: sortedDocuments.map((sortedTodo) => _buildTodoListWidget(sortedTodo)).toList(),
+                    ),
+                  );
+                },
               ),
-              child: _buildTextComposer(),
-            ),
-          ],
+              Divider(height: 1.0),
+              Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                ),
+                child: _buildTextComposer(),
+              ),
+            ],
+          ),
         ),
       ),
+      onWillPop: _onBackPressed,
     );
   }
 
@@ -230,5 +242,23 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
     if (isDone) icon = Icons.check_circle;
     else icon = Icons.radio_button_unchecked_rounded;
     return icon;
+  }
+  
+  Future<bool> _onBackPressed() {
+    return showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("To Do를 종료하실건가요?"),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("아니오"),
+              onPressed: () => Navigator.pop(context, false),
+            ),
+            FlatButton(
+              child: Text("네"),
+              onPressed: () => SystemNavigator.pop(),
+            )
+          ],
+        ));
   }
 }
