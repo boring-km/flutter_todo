@@ -50,6 +50,7 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
           ),
         ),
         body: Container(
+          color: Color.fromRGBO(255, 255, 0, 200),
           child: Column(
             children: <Widget>[
               _buildDateSelector(context),
