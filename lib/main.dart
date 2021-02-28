@@ -89,7 +89,10 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
             .map((sortedTodo) => _buildTodoListWidget(sortedTodo, false))
             .toList();
         if (isDoneList.isNotEmpty) {
-          todoWidgetList.add(Text("완료됨"));
+          todoWidgetList.add(Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(" 완료됨 ", style: TextStyle(backgroundColor: Colors.blue, color: Colors.white),),
+          ));
           isDoneList
               .map((sortedTodo) => _buildTodoListWidget(sortedTodo, true))
               .toList()
