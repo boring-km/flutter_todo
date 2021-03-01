@@ -26,3 +26,9 @@ flutter:
   uses-material-design: true
   assets:
     - assets/todo.png
+
+  fonts:
+    - family: godo
+      fonts:
+        - asset: assets/fonts/godo/GodoB.ttf
+        - asset: assets/fonts/godo/GodoM.ttf

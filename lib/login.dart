@@ -16,6 +16,7 @@ class MyToDoApp extends StatelessWidget {
       title: 'Flutter To Do',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        fontFamily: 'godo'
       ),
       initialRoute: '/login',
       onGenerateRoute: _getRoute,
