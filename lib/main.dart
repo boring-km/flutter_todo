@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_todo/FireBase.dart';
 import 'package:flutter_todo/todo.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 String _name = "test";
 
@@ -32,7 +33,7 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
   final _todoTextEditController = TextEditingController();
   DateTime selectedDate = DateTime.now();
   int _rank = -1;
-  
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -41,11 +42,15 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
           title: Text(widget.title),
           centerTitle: true,
           leading: IconButton(
-            icon: Icon(
-              Icons.logout,
-              color: Colors.white,
-            ),
-            onPressed: () => Navigator.pop(context),
+              icon: Icon(
+                Icons.logout,
+                color: Colors.white,
+              ),
+              onPressed: () async {
+                SharedPreferences _prefs = await SharedPreferences.getInstance();
+                _prefs.clear();
+                Navigator.pop(context);
+              }
           ),
         ),
         body: Container(
@@ -184,34 +189,34 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
     return ListTile(
       onTap: () => null,
       onLongPress: () => showDialog(
-        context: context,
-        barrierDismissible: true,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('할일 변경'),
-            content: TextField(
-              controller: changeTextController,
-              autofocus: true,
-            ),
-            actions: [
-              FlatButton(
-                child: Text('취소'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
+          context: context,
+          barrierDismissible: true,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('할일 변경'),
+              content: TextField(
+                controller: changeTextController,
+                autofocus: true,
               ),
-              FlatButton(
-                child: Text('확인'),
-                onPressed: () {
-                  String text = changeTextController.value.text;
-                  sortedTodo.data = text;
-                  FireBaseDAO.updateTodo(_name, sortedTodo);
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        }
+              actions: [
+                FlatButton(
+                  child: Text('취소'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                FlatButton(
+                  child: Text('확인'),
+                  onPressed: () {
+                    String text = changeTextController.value.text;
+                    sortedTodo.data = text;
+                    FireBaseDAO.updateTodo(_name, sortedTodo);
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          }
       ),
       leading: IconButton(  // 왼쪽
         icon: Icon(
@@ -243,7 +248,7 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
     else icon = Icons.radio_button_unchecked_rounded;
     return icon;
   }
-  
+
   Future<bool> _onBackPressed() {
     return showDialog(
         context: context,
