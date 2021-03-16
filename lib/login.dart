@@ -125,8 +125,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-
-
   void showToast(String msg) {
     Toast.show(msg, context, duration: 2);
   }
@@ -226,23 +224,7 @@ class _LoginPageState extends State<LoginPage> {
                           });
                         },
                       ),
-                      RaisedButton(
-                        child: Text('Sign Up'),
-                        onPressed: () {
-                          if (_usernameController.text.isEmpty ||
-                              _passwordController.text.isEmpty ||
-                              _passwordConfirmController.text.isEmpty) {
-                            showToast('빈 칸 없이 입력해주세요.');
-                          } else {
-                            if (_passwordController.text ==
-                                _passwordConfirmController.text) {
-                              _idCheck(_usernameController.text, _passwordController.text);
-                            } else {
-                              showToast('비밀번호가 일치하지 않아요.');
-                            }
-                          }
-                        },
-                      ),
+                      signUpButton(),
                     ],
                   ),
                 ),
@@ -252,6 +234,26 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+
+  RaisedButton signUpButton() {
+    return RaisedButton(
+                      child: Text('Sign Up'),
+                      onPressed: () {
+                        if (_usernameController.text.isEmpty ||
+                            _passwordController.text.isEmpty ||
+                            _passwordConfirmController.text.isEmpty) {
+                          showToast('빈 칸 없이 입력해주세요.');
+                        } else {
+                          if (_passwordController.text ==
+                              _passwordConfirmController.text) {
+                            _idCheck(_usernameController.text, _passwordController.text);
+                          } else {
+                            showToast('비밀번호가 일치하지 않아요.');
+                          }
+                        }
+                      },
+                    );
   }
 
   Future _login(BuildContext context) async {
