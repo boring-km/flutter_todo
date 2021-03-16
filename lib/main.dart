@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_todo/FireBase.dart';
+import 'package:flutter_todo/sharedPreferences.dart';
 import 'package:flutter_todo/todo.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -47,7 +48,7 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
                 color: Colors.white,
               ),
               onPressed: () async {
-                SharedPreferences _prefs = await SharedPreferences.getInstance();
+                SharedPreferences _prefs = await SharedPref.sharedPref();
                 _prefs.clear();
                 Navigator.pop(context);
               }

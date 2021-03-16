@@ -7,6 +7,7 @@ import 'package:toast/toast.dart';
 import 'package:flutter_todo/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_todo/FireBase.dart';
+import 'package:flutter_todo/sharedPreferences.dart';
 
 
 void main() {
@@ -61,7 +62,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   _loadId() async {
-    _prefs = await SharedPreferences.getInstance();
+    _prefs = await SharedPref.sharedPref();
     if (_prefs.getString('id') != null) {
       setState(() {
         _usernameController.text = (_prefs.getString('id') ?? null);
