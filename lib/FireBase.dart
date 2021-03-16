@@ -42,4 +42,17 @@ class FireBaseDAO {
         .document(id)
         .setData({'pw': pw});
   }
+
+  static idCheck(String id) {
+    Firestore.instance
+        .collection('todo')
+        .document(id)
+        .get();
+  }
+
+  static Future<DocumentSnapshot> loginIdCheck(String id) async {
+    DocumentSnapshot snapshot =
+    await Firestore.instance.collection('todo').document(id).get();
+    return snapshot;
+  }
 }

@@ -93,10 +93,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _idCheck(id, pw) async {
-    final snapshot = await Firestore.instance
-        .collection('todo')
-        .document(_usernameController.text)
-        .get();
+    final snapshot = await FireBaseDAO.idCheck(id);
 
     if (snapshot.exists) {
       print('이미 사용 중');
@@ -112,8 +109,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _loginCheck(String id, String pw) async {
-    DocumentSnapshot snapshot =
-        await Firestore.instance.collection('todo').document(id).get();
+    DocumentSnapshot snapshot = await FireBaseDAO.loginIdCheck(id);
     String savedPW = snapshot['pw'];
     if (pw == savedPW) {
       print('일치함');
@@ -127,6 +123,8 @@ class _LoginPageState extends State<LoginPage> {
       _loginToken = false;
     }
   }
+
+
 
   void showToast(String msg) {
     Toast.show(msg, context, duration: 2);
