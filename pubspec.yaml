@@ -30,14 +30,6 @@ flutter:
     - assets/todo.png
     - assets/todo.gif
   fonts:
-#    - family: Gmarket
-#      fonts:
-#        - asset: assets/fonts/GmarketSansTTFBold.ttf
-#          weight: 700
-#    - family: RIDI
-#      fonts:
-#        - asset: assets/fonts/RIDIBatang.otf
-#          weight: 700
     - family: gyeonggi
       fonts:
         - asset: assets/fonts/gyeonggi.ttf
