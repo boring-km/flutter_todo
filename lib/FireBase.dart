@@ -50,9 +50,10 @@ class FireBaseDAO {
         .get();
   }
 
-  static Future<DocumentSnapshot> loginIdCheck(String id) async {
+  static Future<bool> loginIdCheck(String id, String pw) async {
     DocumentSnapshot snapshot =
     await Firestore.instance.collection('todo').document(id).get();
-    return snapshot;
+    bool result = snapshot['pw'] == pw;
+    return result;
   }
 }
