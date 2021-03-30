@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:toast/toast.dart';
 import 'package:flutter_todo/main.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_todo/FireBase.dart';
 import 'package:flutter_todo/sharedPreferences.dart';
 
@@ -53,7 +52,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordConfirmController = TextEditingController();
   bool _visible = true;
   bool _loginToken = false;
-  SharedPreferences _prefs;
+  SharedPref _prefs;
 
   @override
   void initState() {
@@ -62,11 +61,11 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   _loadId() async {
-    _prefs = await SharedPref.sharedPref();
-    if (_prefs.getString('id') != null) {
+    _prefs = SharedPref();
+    if (_prefs.getId() != null) {
       setState(() {
-        _usernameController.text = (_prefs.getString('id') ?? null);
-        _passwordController.text = (_prefs.getString('pw') ?? null);
+        _usernameController.text = (_prefs.getId() ?? null);
+        _passwordController.text = (_prefs.getPw() ?? null);
         print(_usernameController.text + _passwordController.text);
         _login(context);
       });
@@ -115,8 +114,7 @@ class _LoginPageState extends State<LoginPage> {
     if (pw == savedPW) {
       print('일치함');
       showToast(id + '님, 안녕하세요!');
-      _prefs.setString('id', id);
-      _prefs.setString('pw', pw);
+      _prefs.save(id, pw);
       _loginToken = true;
     } else {
       print('일치하지 않음');

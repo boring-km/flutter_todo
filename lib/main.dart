@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_todo/FireBase.dart';
 import 'package:flutter_todo/sharedPreferences.dart';
 import 'package:flutter_todo/todo.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 String _name = "test";
 
@@ -49,7 +48,7 @@ class _MyToDoState extends State<MyToDo> with TickerProviderStateMixin {
                 color: Colors.white,
               ),
               onPressed: () async {
-                SharedPreferences _prefs = await SharedPref.sharedPref();
+                SharedPref _prefs = new SharedPref();
                 _prefs.clear();
                 Navigator.pop(context);
               }
