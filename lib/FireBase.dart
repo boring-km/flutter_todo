@@ -43,8 +43,8 @@ class FireBaseDAO {
         .setData({'pw': pw});
   }
 
-  static idCheck(String id) {
-    Firestore.instance
+  static Future<DocumentSnapshot> idCheck(String id) async {
+    return await Firestore.instance
         .collection('todo')
         .document(id)
         .get();
