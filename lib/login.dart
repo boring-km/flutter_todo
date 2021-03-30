@@ -17,7 +17,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   final _passwordConfirmController = TextEditingController();
   bool _signUpVisible = true;
-  SharedPref _prefs;
+  SharedPref _prefs = SharedPref();
 
   @override
   void initState() {
@@ -26,7 +26,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   _loadId() async {
-    _prefs = SharedPref();
+    await _prefs.init();
     if (_prefs.getId() != null) {
       setState(() {
         _usernameController.text = (_prefs.getId() ?? null);

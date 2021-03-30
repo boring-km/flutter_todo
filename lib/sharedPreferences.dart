@@ -4,16 +4,8 @@ class SharedPref {
 
   SharedPreferences _prefs;
 
-  SharedPref() {
-    _load();
-  }
-
-  _load() async {
-    _prefs = await _sharedPref();
-  }
-
-  _sharedPref() async {
-    return await SharedPreferences.getInstance();
+  init() async {
+    _prefs = await SharedPreferences.getInstance();
   }
 
   void clear() {
@@ -31,5 +23,6 @@ class SharedPref {
   void save(String id, String pw) {
     _prefs.setString('id', id);
     _prefs.setString('pw', pw);
+    _prefs.commit();
   }
 }
