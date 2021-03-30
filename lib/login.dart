@@ -7,38 +7,6 @@ import 'package:flutter_todo/main.dart';
 import 'package:flutter_todo/FireBase.dart';
 import 'package:flutter_todo/sharedPreferences.dart';
 
-void main() {
-  runApp(MyToDoApp());
-}
-
-class MyToDoApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter To Do',
-      theme: ThemeData(
-        fontFamily: 'gyeonggi',
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      initialRoute: '/login',
-      onGenerateRoute: _getRoute,
-    );
-  }
-
-  Route<dynamic> _getRoute(RouteSettings settings) {
-    if (settings.name != '/login') {
-      return null;
-    }
-
-    return MaterialPageRoute<void>(
-      settings: settings,
-      builder: (BuildContext context) => LoginPage(),
-      fullscreenDialog: true,
-    );
-  }
-}
-
 class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
