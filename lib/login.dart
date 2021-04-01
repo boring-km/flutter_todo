@@ -1,46 +1,11 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:toast/toast.dart';
 import 'package:flutter_todo/main.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_todo/FireBase.dart';
 import 'package:flutter_todo/sharedPreferences.dart';
-
-
-void main() {
-  runApp(MyToDoApp());
-}
-
-class MyToDoApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter To Do',
-      theme: ThemeData(
-        fontFamily: 'gyeonggi',
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      initialRoute: '/login',
-      onGenerateRoute: _getRoute,
-    );
-  }
-
-  Route<dynamic> _getRoute(RouteSettings settings) {
-    if (settings.name != '/login') {
-      return null;
-    }
-
-    return MaterialPageRoute<void>(
-      settings: settings,
-      builder: (BuildContext context) => LoginPage(),
-      fullscreenDialog: true,
-    );
-  }
-}
 
 class LoginPage extends StatefulWidget {
   @override
@@ -51,9 +16,8 @@ class _LoginPageState extends State<LoginPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _passwordConfirmController = TextEditingController();
-  bool _visible = true;
-  bool _loginToken = false;
-  SharedPreferences _prefs;
+  bool _signUpVisible = true;
+  SharedPref _prefs = SharedPref();
 
   @override
   void initState() {
@@ -62,11 +26,11 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   _loadId() async {
-    _prefs = await SharedPref.sharedPref();
-    if (_prefs.getString('id') != null) {
+    await _prefs.init();
+    if (_prefs.getId() != null) {
       setState(() {
-        _usernameController.text = (_prefs.getString('id') ?? null);
-        _passwordController.text = (_prefs.getString('pw') ?? null);
+        _usernameController.text = (_prefs.getId() ?? null);
+        _passwordController.text = (_prefs.getPw() ?? null);
         print(_usernameController.text + _passwordController.text);
         _login(context);
       });
@@ -75,57 +39,36 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<bool> _onBackPressed() {
-    return showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-              title: Text("To Do를 종료하실건가요?"),
-              actions: <Widget>[
-                FlatButton(
-                  child: Text("아니오"),
-                  onPressed: () => Navigator.pop(context, false),
-                ),
-                FlatButton(
-                  child: Text("네"),
-                  onPressed: () => SystemNavigator.pop(),
-                )
-              ],
-            ));
-  }
-
   void _idCheck(id, pw) async {
     final snapshot = await FireBaseDAO.idCheck(id);
 
     if (snapshot.exists) {
       print('이미 사용 중');
-      showToast('이미 사용 중인 아이디에요.');
+      _showToast('이미 사용 중인 아이디에요.');
     } else {
       FireBaseDAO.signUp(id, pw);
       setState(() {
-        _visible = !_visible;
+        _signUpVisible = !_signUpVisible;
       });
-      clear();
-      showToast('회원가입이 완료되었어요.');
+      _inputClear();
+      _showToast('회원가입이 완료되었어요.');
     }
   }
 
-  void _loginCheck(String id, String pw) async {
-    DocumentSnapshot snapshot = await FireBaseDAO.loginIdCheck(id);
-    String savedPW = snapshot['pw'];
-    if (pw == savedPW) {
+  Future<bool> _loginCheck(String id, String pw) async {
+    bool result = await FireBaseDAO.loginIdCheck(id, pw);
+    if (result) {
       print('일치함');
-      showToast(id + '님, 안녕하세요!');
-      _prefs.setString('id', id);
-      _prefs.setString('pw', pw);
-      _loginToken = true;
+      _showToast(id + '님, 안녕하세요!');
+      _prefs.save(id, pw);
     } else {
       print('일치하지 않음');
-      showToast('아이디와 비밀번호를 확인해주세요.');
-      _loginToken = false;
+      _showToast('아이디와 비밀번호를 확인해주세요.');
     }
+    return result;
   }
 
-  void showToast(String msg) {
+  void _showToast(String msg) {
     Toast.show(msg, context, duration: 2);
   }
 
@@ -168,10 +111,10 @@ class _LoginPageState extends State<LoginPage> {
               ),
               SizedBox(height: 12.0),
               AnimatedOpacity(
-                opacity: _visible ? 0.0 : 1.0,
+                opacity: _signUpVisible ? 0.0 : 1.0,
                 duration: Duration(milliseconds: 500),
                 child: Visibility(
-                  visible: !_visible,
+                  visible: !_signUpVisible,
                   child: TextField(
                     controller: _passwordConfirmController,
                     decoration: InputDecoration(
@@ -183,18 +126,18 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               AnimatedOpacity(
-                opacity: _visible ? 1.0 : 0.0,
+                opacity: _signUpVisible ? 1.0 : 0.0,
                 duration: Duration(milliseconds: 500),
                 child: Visibility(
-                  visible: _visible,
+                  visible: _signUpVisible,
                   child: ButtonBar(
                     children: <Widget>[
                       FlatButton(
                         child: Text('Sign Up'),
                         onPressed: () {
-                          clear();
+                          _inputClear();
                           setState(() {
-                            _visible = !_visible;
+                            _signUpVisible = !_signUpVisible;
                           });
                         },
                       ),
@@ -209,22 +152,22 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               AnimatedOpacity(
-                opacity: _visible ? 0.0 : 1.0,
+                opacity: _signUpVisible ? 0.0 : 1.0,
                 duration: Duration(milliseconds: 500),
                 child: Visibility(
-                  visible: !_visible,
+                  visible: !_signUpVisible,
                   child: ButtonBar(
                     children: <Widget>[
                       FlatButton(
                         child: Text('Cancel'),
                         onPressed: () {
-                          clear();
+                          _inputClear();
                           setState(() {
-                            _visible = !_visible;
+                            _signUpVisible = !_signUpVisible;
                           });
                         },
                       ),
-                      signUpButton(),
+                      _signUpButton(),
                     ],
                   ),
                 ),
@@ -236,48 +179,63 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  RaisedButton signUpButton() {
+  RaisedButton _signUpButton() {
     return RaisedButton(
-                      child: Text('Sign Up'),
-                      onPressed: () {
-                        if (_usernameController.text.isEmpty ||
-                            _passwordController.text.isEmpty ||
-                            _passwordConfirmController.text.isEmpty) {
-                          showToast('빈 칸 없이 입력해주세요.');
-                        } else {
-                          if (_passwordController.text ==
-                              _passwordConfirmController.text) {
-                            _idCheck(_usernameController.text, _passwordController.text);
-                          } else {
-                            showToast('비밀번호가 일치하지 않아요.');
-                          }
-                        }
-                      },
-                    );
+      child: Text('Sign Up'),
+      onPressed: () {
+        if (_usernameController.text.isEmpty ||
+            _passwordController.text.isEmpty ||
+            _passwordConfirmController.text.isEmpty) {
+          _showToast('빈 칸 없이 입력해주세요.');
+        } else {
+          if (_passwordController.text == _passwordConfirmController.text) {
+            _idCheck(_usernameController.text, _passwordController.text);
+          } else {
+            _showToast('비밀번호가 일치하지 않아요.');
+          }
+        }
+      },
+    );
   }
 
   Future _login(BuildContext context) async {
     if (_usernameController.text.isEmpty) {
-      showToast('아이디를 입력해주세요.');
+      _showToast('아이디를 입력해주세요.');
     } else if (_passwordController.text.isEmpty) {
-      showToast('비밀번호를 입력해주세요.');
+      _showToast('비밀번호를 입력해주세요.');
     } else {
-      await _loginCheck(_usernameController.text,
-          _passwordController.text);
-      if (_loginToken) {
+      bool result =
+          await _loginCheck(_usernameController.text, _passwordController.text);
+      if (result) {
         String name;
         name = _usernameController.text;
         Navigator.push(
-            context,
-            CupertinoPageRoute(
-                builder: (context) => TodoMain(name)));
+            context, CupertinoPageRoute(builder: (context) => TodoMain(name)));
       }
     }
   }
 
-  void clear() {
+  void _inputClear() {
     _usernameController.clear();
     _passwordController.clear();
     _passwordConfirmController.clear();
+  }
+
+  Future<bool> _onBackPressed() {
+    return showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("To Do를 종료하실건가요?"),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("아니오"),
+              onPressed: () => Navigator.pop(context, false),
+            ),
+            FlatButton(
+              child: Text("네"),
+              onPressed: () => SystemNavigator.pop(),
+            )
+          ],
+        ));
   }
 }

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-void main() => runApp(Sign_up());
+void main() => runApp(SignUpWidget());
 
-class Sign_up extends StatefulWidget {
+class SignUpWidget extends StatefulWidget {
   @override
   SignUpState createState() => SignUpState();
 }
 
-class SignUpState extends State<Sign_up> {
+class SignUpState extends State<SignUpWidget> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -97,7 +97,7 @@ class SignUpState extends State<Sign_up> {
                     hintText: ''
                 ),
                 validator: (String value) {
-                  if (value != _passwordController) {
+                  if (value != _passwordController.text) {
                     return "비밀번호가 일치하지 않습니다.";
                   }
                   return null;
@@ -108,7 +108,6 @@ class SignUpState extends State<Sign_up> {
                 alignment: Alignment.centerRight,
                 child: RaisedButton(
                   onPressed: () {
-
                     // _register();
                     // Navigator.push(
                     //     context,
@@ -126,20 +125,4 @@ class SignUpState extends State<Sign_up> {
       ),
     );
   }
-
-
-//   // 회원가입 메소드
-//   void _register() async {
-//     final AuthResult result = await FirebaseAuth.instance
-//         .createUserWithEmailAndPassword(
-//         email: _emailController.text, password: _passwordController.text);
-//     final FirebaseUser user = result.user;
-//
-//     if (user == null) {
-//       final snacBar = SnackBar(
-//         content: Text("Please try again later"),
-//       );
-//       Scaffold.of(context).showSnackBar(snacBar);
-//     }
-//   }
 }
